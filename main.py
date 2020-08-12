@@ -110,3 +110,22 @@ def get_products_info(self, links):
 
 def get_asins(self, links):
 		return [self.get_asin(link) for link in links]
+
+def get_single_product_info(self, asin):
+        print(f"Product ID: {asin} - getting data...")
+        product_short_url = self.shorten_url(asin)
+        self.driver.get(f'{product_short_url}?language=en_GB')
+        time.sleep(2)
+        title = self.get_title()
+        seller = self.get_seller()
+        price = self.get_price()
+        if title and seller and price:
+            product_info = {
+                'asin': asin,
+                'url': product_short_url,
+                'title': title,
+                'seller': seller,
+                'price': price
+            }
+            return product_info
+        return None
