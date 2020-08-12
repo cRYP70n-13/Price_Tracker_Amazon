@@ -168,3 +168,28 @@ def get_title(self):
             print(f"Can't get price of a product - {self.driver.current_url}")
             return None
         return price
+
+    @staticmethod
+    def get_asin(product_link):
+        return product_link[product_link.find('/dp/') + 4:product_link.find('/ref')]
+
+    def shorten_url(self, asin):
+        return self.base_url + 'dp/' + asin
+
+    def convert_price(self, price):
+        price = price.split(self.currency)[1]
+        try:
+            price = price.split("\n")[0] + "." + price.split("\n")[1]
+        except:
+            Exception()
+        try:
+            price = price.split(",")[0] + price.split(",")[1]
+        except:
+            Exception()
+        return float(price)
+
+
+if __name__ == '__main__':
+    am = AmazonAPI(NAME, FILTERS, BASE_URL, CURRENCY)
+    data = am.run()
+    GenerateReport(NAME, FILTERS, BASE_URL, CURRENCY, data)
