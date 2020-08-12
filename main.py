@@ -98,3 +98,15 @@ class AmazonAPI:
 			print("Didn't get any products...")
 			print(e)
 			return links
+
+def get_products_info(self, links):
+		asins = self.get_asins(links)
+		products = []
+		for asin in asins:
+			product = self.get_single_product_info(asin)
+			if product:
+				products.append(product)
+		return products
+
+def get_asins(self, links):
+		return [self.get_asin(link) for link in links]
