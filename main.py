@@ -80,7 +80,8 @@ class AmazonAPI:
 
 	def get_products_links(self):
 		self.driver.get(self.base_url)
-		element = self.driver.find_element_by_xpath('//*[@id="twotabsearchtextbox"]')
+		element = self.driver.find_element_by_xpath(
+			'//*[@id="twotabsearchtextbox"]')
 		element.send_keys(self.search_term)
 		element.send_keys(Keys.ENTER)
 		time.sleep(2)  # wait to load page
@@ -112,84 +113,86 @@ class AmazonAPI:
 		return [self.get_asin(link) for link in links]
 
 	def get_single_product_info(self, asin):
-        print(f"Product ID: {asin} - getting data...")
-        product_short_url = self.shorten_url(asin)
-        self.driver.get(f'{product_short_url}?language=en_GB')
-        time.sleep(2)
-        title = self.get_title()
-        seller = self.get_seller()
-        price = self.get_price()
-        if title and seller and price:
-            product_info = {
-                'asin': asin,
-                'url': product_short_url,
-                'title': title,
-                'seller': seller,
-                'price': price
-            }
-            return product_info
-        return None
+		print(f"Product ID: {asin} - getting data...")
+		product_short_url = self.shorten_url(asin)
+		self.driver.get(f'{product_short_url}?language=en_GB')
+		time.sleep(2)
+		title = self.get_title()
+		seller = self.get_seller()
+		price = self.get_price()
+		if title and seller and price:
+			product_info = {
+				'asin': asin,
+				'url': product_short_url,
+				'title': title,
+				'seller': seller,
+				'price': price
+			}
+			return product_info
+		return None
 
+	def get_title(self):
+		try:
+			return self.driver.find_element_by_id('productTitle').text
+		except Exception as e:
+			print(e)
+			print(f"Can't get title of a product - {self.driver.current_url}")
+			return None
 
-def get_title(self):
-        try:
-            return self.driver.find_element_by_id('productTitle').text
-        except Exception as e:
-            print(e)
-            print(f"Can't get title of a product - {self.driver.current_url}")
-            return None
+	def get_seller(self):
+		try:
+			return self.driver.find_element_by_id('bylineInfo').text
+		except Exception as e:
+			print(e)
+			print(f"Can't get seller of a product - {self.driver.current_url}")
+			return None
 
-    def get_seller(self):
-        try:
-            return self.driver.find_element_by_id('bylineInfo').text
-        except Exception as e:
-            print(e)
-            print(f"Can't get seller of a product - {self.driver.current_url}")
-            return None
+	def get_price(self):
+		price = None
+		try:
+			price = self.driver.find_element_by_id('priceblock_ourprice').text
+			price = self.convert_price(price)
+		except NoSuchElementException:
+			try:
+				availability = self.driver.find_element_by_id(
+					'availability').text
+				if 'Available' in availability:
+					price = self.driver.find_element_by_class_name(
+						'olp-padding-right').text
+					price = price[price.find(self.currency):]
+					price = self.convert_price(price)
+			except Exception as e:
+				print(e)
+				print(
+					f"Can't get price of a product - {self.driver.current_url}")
+				return None
+		except Exception as e:
+			print(e)
+			print(f"Can't get price of a product - {self.driver.current_url}")
+			return None
+		return price
 
-    def get_price(self):
-        price = None
-        try:
-            price = self.driver.find_element_by_id('priceblock_ourprice').text
-            price = self.convert_price(price)
-        except NoSuchElementException:
-            try:
-                availability = self.driver.find_element_by_id('availability').text
-                if 'Available' in availability:
-                    price = self.driver.find_element_by_class_name('olp-padding-right').text
-                    price = price[price.find(self.currency):]
-                    price = self.convert_price(price)
-            except Exception as e:
-                print(e)
-                print(f"Can't get price of a product - {self.driver.current_url}")
-                return None
-        except Exception as e:
-            print(e)
-            print(f"Can't get price of a product - {self.driver.current_url}")
-            return None
-        return price
+	@staticmethod
+	def get_asin(product_link):
+		return product_link[product_link.find('/dp/') + 4:product_link.find('/ref')]
 
-    @staticmethod
-    def get_asin(product_link):
-        return product_link[product_link.find('/dp/') + 4:product_link.find('/ref')]
+	def shorten_url(self, asin):
+		return self.base_url + 'dp/' + asin
 
-    def shorten_url(self, asin):
-        return self.base_url + 'dp/' + asin
-
-    def convert_price(self, price):
-        price = price.split(self.currency)[1]
-        try:
-            price = price.split("\n")[0] + "." + price.split("\n")[1]
-        except:
-            Exception()
-        try:
-            price = price.split(",")[0] + price.split(",")[1]
-        except:
-            Exception()
-        return float(price)
+	def convert_price(self, price):
+		price = price.split(self.currency)[1]
+		try:
+			price = price.split("\n")[0] + "." + price.split("\n")[1]
+		except:
+			Exception()
+		try:
+			price = price.split(",")[0] + price.split(",")[1]
+		except:
+			Exception()
+		return float(price)
 
 
 if __name__ == '__main__':
-    am = AmazonAPI(NAME, FILTERS, BASE_URL, CURRENCY)
-    data = am.run()
-    GenerateReport(NAME, FILTERS, BASE_URL, CURRENCY, data)
+	am = AmazonAPI(NAME, FILTERS, BASE_URL, CURRENCY)
+	data = am.run()
+	GenerateReport(NAME, FILTERS, BASE_URL, CURRENCY, data)
