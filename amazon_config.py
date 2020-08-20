@@ -9,7 +9,7 @@ FILTERS = {
 	'min': MIN_PRICE,
 	'max': MAX_PRICE
 }
-BASE_URL = "http://www.amazon.de/"
+BASE_URL = "http://www.amazon.com/"
 
 
 def get_chrome_web_driver(options):
